@@ -12,6 +12,7 @@ describe("ForgejoProvider", () => {
       token: "test-token",
       apiUrl: "https://forgejo.example.com/api/v1",
       serverUrl: "https://forgejo.example.com",
+      type: "forgejo",
     };
     provider = new ForgejoProvider(mockConfig);
   });
@@ -25,9 +26,9 @@ describe("ForgejoProvider", () => {
   describe("fetchData", () => {
     it("should throw not implemented error for now", async () => {
       const params: FetchDataParams = {
-        owner: "test-owner",
-        repository: "test-repo",
+        repository: "test-owner/test-repo",
         prNumber: "123",
+        isPR: true,
       };
 
       await expect(provider.fetchData(params)).rejects.toThrow(
