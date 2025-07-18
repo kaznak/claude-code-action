@@ -39,19 +39,13 @@ export class ForgejoProvider implements GitForgeProvider {
 
     try {
       if (isPR) {
-        return await this.fetchPullRequestData(
-          owner,
-          repo,
-          prNumber,
-          triggerUsername ?? undefined,
-        );
+        return triggerUsername !== undefined
+          ? await this.fetchPullRequestData(owner, repo, prNumber, triggerUsername)
+          : await this.fetchPullRequestData(owner, repo, prNumber);
       } else {
-        return await this.fetchIssueData(
-          owner,
-          repo,
-          prNumber,
-          triggerUsername ?? undefined,
-        );
+        return triggerUsername !== undefined
+          ? await this.fetchIssueData(owner, repo, prNumber, triggerUsername)
+          : await this.fetchIssueData(owner, repo, prNumber);
       }
     } catch (error) {
       console.error(
