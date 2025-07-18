@@ -7,6 +7,9 @@
     "format:check": "prettier --check .",
     "install-hooks": "bun run scripts/install-hooks.sh",
     "test": "bun test",
+    "test:forgejo": "bash scripts/test-forgejo.sh",
+    "test:forgejo:unit": "bash scripts/test-forgejo.sh --unit",
+    "test:forgejo:integration": "bash scripts/test-forgejo.sh --integration",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
