@@ -49,11 +49,11 @@ describe("ForgejoProvider", () => {
       const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
 
       const result = await invalidProvider.fetchUserDisplayName("testuser");
-      
+
       expect(result).toBeNull();
       expect(consoleSpy).toHaveBeenCalledWith(
         "Failed to fetch user display name for testuser:",
-        expect.any(Error)
+        expect.any(Error),
       );
       consoleSpy.mockRestore();
     });
@@ -135,7 +135,9 @@ describe("ForgejoProvider", () => {
 
       await expect(
         provider.createComment("test-owner/test-repo", "123", "Test comment"),
-      ).rejects.toThrow("Failed to create comment on test-owner/test-repo#123: 403 Forbidden");
+      ).rejects.toThrow(
+        "Failed to create comment on test-owner/test-repo#123: 403 Forbidden",
+      );
     });
 
     it("should throw error for invalid repository format", async () => {
@@ -186,7 +188,9 @@ describe("ForgejoProvider", () => {
           "456",
           "Updated comment",
         ),
-      ).rejects.toThrow("Failed to update comment 456 on test-owner/test-repo: 404 Not found");
+      ).rejects.toThrow(
+        "Failed to update comment 456 on test-owner/test-repo: 404 Not found",
+      );
     });
 
     it("should throw error for invalid repository format", async () => {
