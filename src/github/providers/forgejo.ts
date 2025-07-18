@@ -74,6 +74,17 @@ export class ForgejoProvider implements GitForgeProvider {
     owner: string,
     repo: string,
     prNumber: string,
+  ): Promise<FetchDataResult>;
+  private async fetchPullRequestData(
+    owner: string,
+    repo: string,
+    prNumber: string,
+    triggerUsername: string,
+  ): Promise<FetchDataResult>;
+  private async fetchPullRequestData(
+    owner: string,
+    repo: string,
+    prNumber: string,
     triggerUsername?: string,
   ): Promise<FetchDataResult> {
     // Fetch pull request data using multiple REST API calls
@@ -154,6 +165,17 @@ export class ForgejoProvider implements GitForgeProvider {
     };
   }
 
+  private async fetchIssueData(
+    owner: string,
+    repo: string,
+    issueNumber: string,
+  ): Promise<FetchDataResult>;
+  private async fetchIssueData(
+    owner: string,
+    repo: string,
+    issueNumber: string,
+    triggerUsername: string,
+  ): Promise<FetchDataResult>;
   private async fetchIssueData(
     owner: string,
     repo: string,
