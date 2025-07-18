@@ -1,8 +1,5 @@
 import type { GitForgeProvider, GitForgeConfig } from "./interface";
-import type {
-  FetchDataResult,
-  FetchDataParams,
-} from "./types";
+import type { FetchDataResult, FetchDataParams } from "./types";
 
 /**
  * Forgejo provider implementation using REST API

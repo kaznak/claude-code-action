@@ -330,7 +330,11 @@ export class GitHubProvider implements GitForgeProvider {
     }));
   }
 
-  private convertToForgeCommit(commit: {oid: string; message: string; author: {name: string; email: string}}): ForgeCommit {
+  private convertToForgeCommit(commit: {
+    oid: string;
+    message: string;
+    author: { name: string; email: string };
+  }): ForgeCommit {
     return {
       oid: commit.oid,
       message: commit.message,

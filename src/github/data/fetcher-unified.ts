@@ -1,10 +1,7 @@
 import { createOctokit } from "../api/client";
 import { FORGE_TYPE } from "../api/config";
 import { createGitForgeProviderFromEnv } from "../providers";
-import type {
-  FetchDataResult,
-  FetchDataParams,
-} from "../providers";
+import type { FetchDataResult, FetchDataParams } from "../providers";
 
 /**
  * Unified data fetcher that works with any Git forge provider
