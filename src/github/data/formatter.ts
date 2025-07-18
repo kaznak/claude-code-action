@@ -5,7 +5,7 @@ import type {
   GitHubFile,
   GitHubReview,
 } from "../types";
-import type { GitHubFileWithSHA } from "./fetcher";
+import type { GitHubFileWithSHA } from "./fetcher-unified";
 import { sanitizeContent } from "../utils/sanitizer";
 
 export function formatContext(

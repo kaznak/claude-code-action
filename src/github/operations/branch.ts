@@ -11,7 +11,7 @@ import * as core from "@actions/core";
 import type { ParsedGitHubContext } from "../context";
 import type { GitHubPullRequest } from "../types";
 import type { Octokits } from "../api/client";
-import type { FetchDataResult } from "../data/fetcher";
+import type { FetchDataResult } from "../data/fetcher-unified";
 
 export type BranchInfo = {
   baseBranch: string;

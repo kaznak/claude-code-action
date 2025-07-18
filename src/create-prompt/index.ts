@@ -2,7 +2,7 @@
 
 import * as core from "@actions/core";
 import { writeFile, mkdir } from "fs/promises";
-import type { FetchDataResult } from "../github/data/fetcher";
+import type { FetchDataResult } from "../github/data/fetcher-unified";
 import {
   formatContext,
   formatBody,

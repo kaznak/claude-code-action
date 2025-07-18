@@ -16,7 +16,7 @@ import { configureGitAuth } from "../github/operations/git-config";
 import { prepareMcpConfig } from "../mcp/install-mcp-server";
 import { createPrompt } from "../create-prompt";
 import { createOctokit } from "../github/api/client";
-import { fetchGitHubData } from "../github/data/fetcher";
+import { fetchForgeData } from "../github/data/fetcher-unified";
 import { parseGitHubContext } from "../github/context";
 
 async function run() {
@@ -55,8 +55,7 @@ async function run() {
     const commentId = commentData.id;
 
     // Step 7: Fetch GitHub data (once for both branch setup and prompt creation)
-    const githubData = await fetchGitHubData({
-      octokits: octokit,
+    const githubData = await fetchForgeData({
       repository: `${context.repository.owner}/${context.repository.repo}`,
       prNumber: context.entityNumber.toString(),
       isPR: context.isPR,
