@@ -43,14 +43,14 @@ export class ForgejoProvider implements GitForgeProvider {
           owner,
           repo,
           prNumber,
-          triggerUsername,
+          triggerUsername ?? undefined,
         );
       } else {
         return await this.fetchIssueData(
           owner,
           repo,
           prNumber,
-          triggerUsername,
+          triggerUsername ?? undefined,
         );
       }
     } catch (error) {
