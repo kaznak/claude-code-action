@@ -13,7 +13,7 @@ import type {
   GitHubComment,
   GitHubFile,
 } from "../src/github/types";
-import type { GitHubFileWithSHA } from "../src/github/data/fetcher";
+import type { GitHubFileWithSHA } from "../src/github/data/fetcher-unified";
 
 describe("formatContext", () => {
   test("formats PR context correctly", () => {
