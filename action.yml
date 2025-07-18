@@ -105,6 +105,18 @@ inputs:
     required: false
     default: ""
 
+  # Git forge configuration
+  forge_type:
+    description: "Git forge type (github or forgejo)"
+    required: false
+    default: "github"
+  forge_api_url:
+    description: "Git forge API URL (for self-hosted instances)"
+    required: false
+  forge_server_url:
+    description: "Git forge server URL (for self-hosted instances)"
+    required: false
+
 outputs:
   execution_file:
     description: "Path to the Claude Code execution output file"
@@ -149,6 +161,9 @@ runs:
         ACTIONS_TOKEN: ${{ github.token }}
         ADDITIONAL_PERMISSIONS: ${{ inputs.additional_permissions }}
         USE_COMMIT_SIGNING: ${{ inputs.use_commit_signing }}
+        FORGE_TYPE: ${{ inputs.forge_type }}
+        FORGE_API_URL: ${{ inputs.forge_api_url }}
+        FORGE_SERVER_URL: ${{ inputs.forge_server_url }}
 
     - name: Setup Network Restrictions
       if: steps.prepare.outputs.contains_trigger == 'true' && inputs.experimental_allowed_domains != ''
@@ -227,6 +242,11 @@ runs:
         VERTEX_REGION_CLAUDE_3_5_HAIKU: ${{ env.VERTEX_REGION_CLAUDE_3_5_HAIKU }}
         VERTEX_REGION_CLAUDE_3_5_SONNET: ${{ env.VERTEX_REGION_CLAUDE_3_5_SONNET }}
         VERTEX_REGION_CLAUDE_3_7_SONNET: ${{ env.VERTEX_REGION_CLAUDE_3_7_SONNET }}
+
+        # Git forge configuration
+        FORGE_TYPE: ${{ inputs.forge_type }}
+        FORGE_API_URL: ${{ inputs.forge_api_url }}
+        FORGE_SERVER_URL: ${{ inputs.forge_server_url }}
 
     - name: Update comment with job link
       if: steps.prepare.outputs.contains_trigger == 'true' && steps.prepare.outputs.claude_comment_id && always()

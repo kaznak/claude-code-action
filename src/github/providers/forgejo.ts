@@ -1,13 +1,16 @@
 import type { GitForgeProvider, GitForgeConfig } from "./interface";
 import type { FetchDataResult, FetchDataParams } from "./types";
+import { ForgejoApiClient } from "./forgejo-client";
 
 /**
  * Forgejo provider implementation using REST API
  * This is a skeleton implementation that will be completed in Phase 2
  */
 export class ForgejoProvider implements GitForgeProvider {
-  constructor(_config: GitForgeConfig) {
-    // Config will be used in Phase 2 implementation
+  private client: ForgejoApiClient;
+
+  constructor(config: GitForgeConfig) {
+    this.client = new ForgejoApiClient(config);
   }
 
   getProviderType(): string {
@@ -23,41 +26,64 @@ export class ForgejoProvider implements GitForgeProvider {
   }
 
   async fetchUserDisplayName(login: string): Promise<string | null> {
-    // TODO: Implement using Forgejo REST API
-    // GET /api/v1/users/{username}
-
-    console.warn(
-      `Forgejo fetchUserDisplayName not yet implemented for ${login}`,
-    );
-    return null;
+    try {
+      const response = await this.client.get(`/users/${login}`);
+      if (response.ok && response.data) {
+        return response.data.full_name || response.data.login || null;
+      }
+      return null;
+    } catch (error) {
+      console.error(`Failed to fetch user display name for ${login}:`, error);
+      return null;
+    }
   }
 
   async createComment(
     repository: string,
     number: string,
-    _body: string,
+    body: string,
   ): Promise<void> {
-    // TODO: Implement using Forgejo REST API
-    // POST /api/v1/repos/{owner}/{repo}/issues/{index}/comments
+    try {
+      const [owner, repo] = repository.split("/");
+      const response = await this.client.post(
+        `/repos/${owner}/${repo}/issues/${number}/comments`,
+        { body },
+      );
 
-    console.warn(
-      `Forgejo createComment not yet implemented for ${repository}#${number}`,
-    );
-    throw new Error("Forgejo createComment not yet implemented");
+      if (!response.ok) {
+        throw new Error(`Failed to create comment: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(
+        `Failed to create comment for ${repository}#${number}:`,
+        error,
+      );
+      throw error;
+    }
   }
 
   async updateComment(
-    _repository: string,
+    repository: string,
     commentId: string,
-    _body: string,
+    body: string,
   ): Promise<void> {
-    // TODO: Implement using Forgejo REST API
-    // PATCH /api/v1/repos/{owner}/{repo}/issues/comments/{id}
+    try {
+      const [owner, repo] = repository.split("/");
+      const response = await this.client.patch(
+        `/repos/${owner}/${repo}/issues/comments/${commentId}`,
+        { body },
+      );
 
-    console.warn(
-      `Forgejo updateComment not yet implemented for comment ${commentId}`,
-    );
-    throw new Error("Forgejo updateComment not yet implemented");
+      if (!response.ok) {
+        throw new Error(`Failed to update comment: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(
+        `Failed to update comment ${commentId} for ${repository}:`,
+        error,
+      );
+      throw error;
+    }
   }
 
   // TODO: Phase 2 - Implement these private helper methods
