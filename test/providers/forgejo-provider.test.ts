@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, jest } from "bun:test";
+import { describe, it, expect, beforeEach, jest, spyOn } from "bun:test";
 import { ForgejoProvider } from "../../src/github/providers/forgejo";
 import type { GitForgeConfig } from "../../src/github/providers/interface";
 import type { FetchDataParams } from "../../src/github/providers/types";
@@ -34,6 +34,28 @@ describe("ForgejoProvider", () => {
       await expect(provider.fetchData(params)).rejects.toThrow(
         "Forgejo provider not yet implemented. Coming in Phase 2.",
       );
+    });
+  });
+
+  describe("constructor", () => {
+    it("should return null when apiUrl is not provided", async () => {
+      const invalidConfig = {
+        token: "test-token",
+        apiUrl: "",
+        serverUrl: "https://forgejo.example.com",
+        type: "forgejo" as const,
+      };
+      const invalidProvider = new ForgejoProvider(invalidConfig);
+      const consoleSpy = spyOn(console, "error").mockImplementation(() => {});
+
+      const result = await invalidProvider.fetchUserDisplayName("testuser");
+      
+      expect(result).toBeNull();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Failed to fetch user display name for testuser:",
+        expect.any(Error)
+      );
+      consoleSpy.mockRestore();
     });
   });
 
@@ -107,12 +129,19 @@ describe("ForgejoProvider", () => {
         ok: false,
         status: 403,
         json: async () => ({ message: "Forbidden" }),
+        data: { message: "Forbidden" },
       });
       global.fetch = mockFetch as any;
 
       await expect(
         provider.createComment("test-owner/test-repo", "123", "Test comment"),
-      ).rejects.toThrow("Failed to create comment: 403");
+      ).rejects.toThrow("Failed to create comment on test-owner/test-repo#123: 403 Forbidden");
+    });
+
+    it("should throw error for invalid repository format", async () => {
+      await expect(
+        provider.createComment("invalid-repo", "123", "Test comment"),
+      ).rejects.toThrow("Invalid repository format: invalid-repo");
     });
   });
 
@@ -147,6 +176,7 @@ describe("ForgejoProvider", () => {
         ok: false,
         status: 404,
         json: async () => ({ message: "Not found" }),
+        data: { message: "Not found" },
       });
       global.fetch = mockFetch as any;
 
@@ -156,7 +186,13 @@ describe("ForgejoProvider", () => {
           "456",
           "Updated comment",
         ),
-      ).rejects.toThrow("Failed to update comment: 404");
+      ).rejects.toThrow("Failed to update comment 456 on test-owner/test-repo: 404 Not found");
+    });
+
+    it("should throw error for invalid repository format", async () => {
+      await expect(
+        provider.updateComment("invalid-repo", "456", "Updated comment"),
+      ).rejects.toThrow("Invalid repository format: invalid-repo");
     });
   });
 });

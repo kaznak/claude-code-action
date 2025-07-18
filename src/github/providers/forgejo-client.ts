@@ -20,8 +20,10 @@ export class ForgejoApiClient {
   }
 
   private getApiUrl(path: string): string {
-    const baseUrl = this.config.apiUrl || "https://forgejo.example.com/api/v1";
-    return `${baseUrl}${path}`;
+    if (!this.config.apiUrl) {
+      throw new Error("apiUrl is required for Forgejo provider");
+    }
+    return `${this.config.apiUrl}${path}`;
   }
 
   async get(path: string): Promise<ForgejoApiResponse> {

@@ -44,14 +44,21 @@ export class ForgejoProvider implements GitForgeProvider {
     body: string,
   ): Promise<void> {
     try {
-      const [owner, repo] = repository.split("/");
+      const parts = repository.split("/");
+      if (parts.length !== 2) {
+        throw new Error(`Invalid repository format: ${repository}`);
+      }
+      const [owner, repo] = parts;
+      
       const response = await this.client.post(
         `/repos/${owner}/${repo}/issues/${number}/comments`,
         { body },
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to create comment: ${response.status}`);
+        throw new Error(
+          `Failed to create comment on ${repository}#${number}: ${response.status} ${response.data?.message || 'Unknown error'}`,
+        );
       }
     } catch (error) {
       console.error(
@@ -68,14 +75,21 @@ export class ForgejoProvider implements GitForgeProvider {
     body: string,
   ): Promise<void> {
     try {
-      const [owner, repo] = repository.split("/");
+      const parts = repository.split("/");
+      if (parts.length !== 2) {
+        throw new Error(`Invalid repository format: ${repository}`);
+      }
+      const [owner, repo] = parts;
+      
       const response = await this.client.patch(
         `/repos/${owner}/${repo}/issues/comments/${commentId}`,
         { body },
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to update comment: ${response.status}`);
+        throw new Error(
+          `Failed to update comment ${commentId} on ${repository}: ${response.status} ${response.data?.message || 'Unknown error'}`,
+        );
       }
     } catch (error) {
       console.error(
