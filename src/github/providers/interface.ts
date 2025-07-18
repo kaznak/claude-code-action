@@ -17,12 +17,20 @@ export interface GitForgeProvider {
   /**
    * Create a comment on a pull request or issue
    */
-  createComment(repository: string, number: string, body: string): Promise<void>;
+  createComment(
+    repository: string,
+    number: string,
+    body: string,
+  ): Promise<void>;
 
   /**
    * Update an existing comment
    */
-  updateComment(repository: string, commentId: string, body: string): Promise<void>;
+  updateComment(
+    repository: string,
+    commentId: string,
+    body: string,
+  ): Promise<void>;
 
   /**
    * Get the provider type identifier
@@ -41,5 +49,5 @@ export interface GitForgeConfig {
   /** Authentication token */
   token: string;
   /** Provider type */
-  type: 'github' | 'forgejo';
+  type: "github" | "forgejo";
 }

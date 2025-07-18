@@ -1,15 +1,7 @@
 import type { GitForgeProvider, GitForgeConfig } from "./interface";
-import type { 
-  FetchDataResult, 
-  FetchDataParams, 
-  ForgeFileWithSHA,
-  ForgeAuthor,
-  ForgeComment,
-  ForgeCommit,
-  ForgeFile,
-  ForgeReview,
-  ForgePullRequest,
-  ForgeIssue
+import type {
+  FetchDataResult,
+  FetchDataParams,
 } from "./types";
 
 /**
@@ -17,26 +9,17 @@ import type {
  * This is a skeleton implementation that will be completed in Phase 2
  */
 export class ForgejoProvider implements GitForgeProvider {
-  private config: GitForgeConfig;
-
-  constructor(config: GitForgeConfig) {
-    this.config = config;
+  constructor(_config: GitForgeConfig) {
+    // Config will be used in Phase 2 implementation
   }
 
   getProviderType(): string {
-    return 'forgejo';
+    return "forgejo";
   }
 
-  async fetchData(params: FetchDataParams): Promise<FetchDataResult> {
+  async fetchData(_params: FetchDataParams): Promise<FetchDataResult> {
     // TODO: Implement Forgejo REST API calls in Phase 2
     // This will replace GraphQL queries with REST API calls to Forgejo
-    
-    const { repository, prNumber, isPR, triggerUsername } = params;
-    const [owner, repo] = repository.split("/");
-    
-    if (!owner || !repo) {
-      throw new Error("Invalid repository format. Expected 'owner/repo'.");
-    }
 
     // Placeholder implementation - will be replaced with actual REST API calls
     throw new Error("Forgejo provider not yet implemented. Coming in Phase 2.");
@@ -45,24 +28,38 @@ export class ForgejoProvider implements GitForgeProvider {
   async fetchUserDisplayName(login: string): Promise<string | null> {
     // TODO: Implement using Forgejo REST API
     // GET /api/v1/users/{username}
-    
-    console.warn(`Forgejo fetchUserDisplayName not yet implemented for ${login}`);
+
+    console.warn(
+      `Forgejo fetchUserDisplayName not yet implemented for ${login}`,
+    );
     return null;
   }
 
-  async createComment(repository: string, number: string, body: string): Promise<void> {
+  async createComment(
+    repository: string,
+    number: string,
+    _body: string,
+  ): Promise<void> {
     // TODO: Implement using Forgejo REST API
     // POST /api/v1/repos/{owner}/{repo}/issues/{index}/comments
-    
-    console.warn(`Forgejo createComment not yet implemented for ${repository}#${number}`);
+
+    console.warn(
+      `Forgejo createComment not yet implemented for ${repository}#${number}`,
+    );
     throw new Error("Forgejo createComment not yet implemented");
   }
 
-  async updateComment(repository: string, commentId: string, body: string): Promise<void> {
+  async updateComment(
+    _repository: string,
+    commentId: string,
+    _body: string,
+  ): Promise<void> {
     // TODO: Implement using Forgejo REST API
     // PATCH /api/v1/repos/{owner}/{repo}/issues/comments/{id}
-    
-    console.warn(`Forgejo updateComment not yet implemented for comment ${commentId}`);
+
+    console.warn(
+      `Forgejo updateComment not yet implemented for comment ${commentId}`,
+    );
     throw new Error("Forgejo updateComment not yet implemented");
   }
 

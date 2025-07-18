@@ -1,8 +1,8 @@
 // Export all provider-related types and classes
 export type { GitForgeProvider, GitForgeConfig } from "./interface";
-export type { 
-  FetchDataResult, 
-  FetchDataParams, 
+export type {
+  FetchDataResult,
+  FetchDataParams,
   ForgeAuthor,
   ForgeComment,
   ForgeReviewComment,
@@ -11,14 +11,14 @@ export type {
   ForgeFileWithSHA,
   ForgeReview,
   ForgePullRequest,
-  ForgeIssue
+  ForgeIssue,
 } from "./types";
 
 export { GitHubProvider } from "./github";
 export { ForgejoProvider } from "./forgejo";
-export { 
-  createGitForgeProvider, 
+export {
+  createGitForgeProvider,
   createGitForgeProviderFromEnv,
   isGitHubProvider,
-  isForgejoProvider
+  isForgejoProvider,
 } from "./factory";

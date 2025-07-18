@@ -1,14 +1,21 @@
 import { createOctokit } from "../api/client";
-import { FORGE_TYPE, FORGE_API_URL, FORGE_SERVER_URL } from "../api/config";
-import { createGitForgeProvider, createGitForgeProviderFromEnv } from "../providers";
-import type { GitForgeProvider, GitForgeConfig, FetchDataResult, FetchDataParams } from "../providers";
+import { FORGE_TYPE } from "../api/config";
+import { createGitForgeProviderFromEnv } from "../providers";
+import type {
+  FetchDataResult,
+  FetchDataParams,
+} from "../providers";
 
 /**
  * Unified data fetcher that works with any Git forge provider
  */
-export async function fetchForgeData(params: FetchDataParams): Promise<FetchDataResult> {
+export async function fetchForgeData(
+  params: FetchDataParams,
+): Promise<FetchDataResult> {
   const provider = createGitForgeProviderFromEnv(
-    FORGE_TYPE === 'github' ? createOctokit(process.env.GITHUB_TOKEN || '') : undefined
+    FORGE_TYPE === "github"
+      ? createOctokit(process.env.GITHUB_TOKEN || "")
+      : undefined,
   );
 
   return await provider.fetchData(params);
@@ -17,9 +24,13 @@ export async function fetchForgeData(params: FetchDataParams): Promise<FetchData
 /**
  * Fetch user display name using the configured provider
  */
-export async function fetchUserDisplayName(login: string): Promise<string | null> {
+export async function fetchUserDisplayName(
+  login: string,
+): Promise<string | null> {
   const provider = createGitForgeProviderFromEnv(
-    FORGE_TYPE === 'github' ? createOctokit(process.env.GITHUB_TOKEN || '') : undefined
+    FORGE_TYPE === "github"
+      ? createOctokit(process.env.GITHUB_TOKEN || "")
+      : undefined,
   );
 
   return await provider.fetchUserDisplayName(login);
@@ -28,9 +39,15 @@ export async function fetchUserDisplayName(login: string): Promise<string | null
 /**
  * Create a comment using the configured provider
  */
-export async function createComment(repository: string, number: string, body: string): Promise<void> {
+export async function createComment(
+  repository: string,
+  number: string,
+  body: string,
+): Promise<void> {
   const provider = createGitForgeProviderFromEnv(
-    FORGE_TYPE === 'github' ? createOctokit(process.env.GITHUB_TOKEN || '') : undefined
+    FORGE_TYPE === "github"
+      ? createOctokit(process.env.GITHUB_TOKEN || "")
+      : undefined,
   );
 
   return await provider.createComment(repository, number, body);
@@ -39,9 +56,15 @@ export async function createComment(repository: string, number: string, body: st
 /**
  * Update a comment using the configured provider
  */
-export async function updateComment(repository: string, commentId: string, body: string): Promise<void> {
+export async function updateComment(
+  repository: string,
+  commentId: string,
+  body: string,
+): Promise<void> {
   const provider = createGitForgeProviderFromEnv(
-    FORGE_TYPE === 'github' ? createOctokit(process.env.GITHUB_TOKEN || '') : undefined
+    FORGE_TYPE === "github"
+      ? createOctokit(process.env.GITHUB_TOKEN || "")
+      : undefined,
   );
 
   return await provider.updateComment(repository, commentId, body);
@@ -59,7 +82,7 @@ export async function fetchGitHubData(params: {
   triggerUsername?: string;
 }): Promise<FetchDataResult> {
   console.warn("fetchGitHubData is deprecated. Use fetchForgeData instead.");
-  
+
   const forgeParams: FetchDataParams = {
     repository: params.repository,
     prNumber: params.prNumber,

@@ -22,40 +22,42 @@ describe("GitHubProvider", () => {
           listFiles: mock(() => Promise.resolve({ data: [] })),
         },
       },
-      graphql: mock(() => Promise.resolve({
-        repository: {
-          pullRequest: {
-            title: "Test PR",
-            body: "Test body",
-            author: { login: "test-user", name: "Test User" },
-            baseRefName: "main",
-            headRefName: "feature/test",
-            headRefOid: "abc123",
-            createdAt: "2023-01-01T00:00:00Z",
-            additions: 50,
-            deletions: 30,
-            state: "OPEN",
-            commits: { totalCount: 1, nodes: [] },
-            files: { nodes: [] },
-            comments: { nodes: [] },
-            reviews: { nodes: [] },
+      graphql: mock(() =>
+        Promise.resolve({
+          repository: {
+            pullRequest: {
+              title: "Test PR",
+              body: "Test body",
+              author: { login: "test-user", name: "Test User" },
+              baseRefName: "main",
+              headRefName: "feature/test",
+              headRefOid: "abc123",
+              createdAt: "2023-01-01T00:00:00Z",
+              additions: 50,
+              deletions: 30,
+              state: "OPEN",
+              commits: { totalCount: 1, nodes: [] },
+              files: { nodes: [] },
+              comments: { nodes: [] },
+              reviews: { nodes: [] },
+            },
           },
-        },
-      })),
+        }),
+      ),
     } as unknown as Octokits;
 
     config = {
-      type: 'github',
-      apiUrl: 'https://api.github.com',
-      serverUrl: 'https://github.com',
-      token: 'test-token',
+      type: "github",
+      apiUrl: "https://api.github.com",
+      serverUrl: "https://github.com",
+      token: "test-token",
     };
 
     provider = new GitHubProvider(mockOctokits, config);
   });
 
   test("getProviderType returns 'github'", () => {
-    expect(provider.getProviderType()).toBe('github');
+    expect(provider.getProviderType()).toBe("github");
   });
 
   test("fetchData fetches PR data using GraphQL", async () => {
@@ -71,9 +73,12 @@ describe("GitHubProvider", () => {
   });
 
   test("fetchUserDisplayName fetches user data", async () => {
-    mockOctokits.graphql = mock(() => Promise.resolve({
-      user: { name: "Test User Display" }
-    }));
+    const mockGraphql = mock(() =>
+      Promise.resolve({
+        user: { name: "Test User Display" },
+      }),
+    );
+    (mockOctokits as any).graphql = mockGraphql;
 
     const name = await provider.fetchUserDisplayName("test-user");
     expect(name).toBe("Test User Display");
@@ -107,7 +112,7 @@ describe("GitHubProvider", () => {
         repository: "invalid-format",
         prNumber: "123",
         isPR: true,
-      })
+      }),
     ).rejects.toThrow("Invalid repository format");
   });
 

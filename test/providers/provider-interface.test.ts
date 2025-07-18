@@ -1,10 +1,9 @@
-import { expect, test, describe, beforeEach, mock } from "bun:test";
-import type { GitForgeProvider, GitForgeConfig } from "../../src/github/providers/interface";
-import type { 
-  FetchDataResult, 
+import { expect, test, describe } from "bun:test";
+import type { GitForgeProvider } from "../../src/github/providers/interface";
+import type {
+  FetchDataResult,
   FetchDataParams,
   ForgePullRequest,
-  ForgeIssue
 } from "../../src/github/providers/types";
 
 /**
@@ -14,10 +13,10 @@ class MockGitForgeProvider implements GitForgeProvider {
   constructor(private mockData: Partial<FetchDataResult> = {}) {}
 
   getProviderType(): string {
-    return 'mock';
+    return "mock";
   }
 
-  async fetchData(params: FetchDataParams): Promise<FetchDataResult> {
+  async fetchData(_params: FetchDataParams): Promise<FetchDataResult> {
     const defaultResult: FetchDataResult = {
       contextData: {
         title: "Test PR",
@@ -33,7 +32,7 @@ class MockGitForgeProvider implements GitForgeProvider {
         commits: { totalCount: 1, nodes: [] },
         files: { nodes: [] },
         comments: { nodes: [] },
-        reviews: { nodes: [] }
+        reviews: { nodes: [] },
       } as ForgePullRequest,
       comments: [],
       changedFiles: [],
@@ -50,11 +49,19 @@ class MockGitForgeProvider implements GitForgeProvider {
     return login === "test-user" ? "Test User" : null;
   }
 
-  async createComment(repository: string, number: string, body: string): Promise<void> {
+  async createComment(
+    _repository: string,
+    _number: string,
+    _body: string,
+  ): Promise<void> {
     // Mock implementation
   }
 
-  async updateComment(repository: string, commentId: string, body: string): Promise<void> {
+  async updateComment(
+    _repository: string,
+    _commentId: string,
+    _body: string,
+  ): Promise<void> {
     // Mock implementation
   }
 }
@@ -62,7 +69,7 @@ class MockGitForgeProvider implements GitForgeProvider {
 describe("GitForgeProvider Interface", () => {
   test("provider should implement all required methods", () => {
     const provider = new MockGitForgeProvider();
-    
+
     expect(typeof provider.getProviderType).toBe("function");
     expect(typeof provider.fetchData).toBe("function");
     expect(typeof provider.fetchUserDisplayName).toBe("function");
@@ -89,10 +96,10 @@ describe("GitForgeProvider Interface", () => {
 
   test("fetchUserDisplayName should return name or null", async () => {
     const provider = new MockGitForgeProvider();
-    
+
     const name = await provider.fetchUserDisplayName("test-user");
     expect(name).toBe("Test User");
-    
+
     const nullName = await provider.fetchUserDisplayName("unknown-user");
     expect(nullName).toBeNull();
   });

@@ -20,21 +20,25 @@ test/
 ## Running Tests
 
 ### Run All Tests
+
 ```bash
 bun test
 ```
 
 ### Run Provider Tests Only
+
 ```bash
 bun test test/providers/
 ```
 
 ### Run Specific Test File
+
 ```bash
 bun test test/providers/factory.test.ts
 ```
 
 ### Watch Mode
+
 ```bash
 bun test --watch
 ```
@@ -44,16 +48,19 @@ bun test --watch
 ### 1. Unit Tests
 
 #### Provider Interface Tests
+
 - Verify all providers implement the required interface
 - Test method signatures and return types
 - Use mock implementations for testing
 
 #### Factory Tests
+
 - Test provider creation with different configurations
 - Test environment variable handling
 - Test error cases (missing tokens, invalid types)
 
 #### Provider Implementation Tests
+
 - Mock external dependencies (API calls)
 - Test data transformation logic
 - Test error handling
@@ -61,6 +68,7 @@ bun test --watch
 ### 2. Integration Tests (Phase 2)
 
 #### Mock API Server
+
 ```typescript
 // test/mocks/forgejo-api-server.ts
 import { serve } from "bun";
@@ -70,7 +78,7 @@ export function createMockForgejoServer() {
     port: 3000,
     fetch(req) {
       const url = new URL(req.url);
-      
+
       // Mock API endpoints
       if (url.pathname === "/api/v1/repos/owner/repo/issues/123") {
         return Response.json({
@@ -80,7 +88,7 @@ export function createMockForgejoServer() {
           // ... other fields
         });
       }
-      
+
       return new Response("Not found", { status: 404 });
     },
   });
@@ -88,22 +96,23 @@ export function createMockForgejoServer() {
 ```
 
 #### Integration Test Example
+
 ```typescript
 test("fetches Forgejo issue data", async () => {
   const server = createMockForgejoServer();
-  
+
   process.env.FORGE_TYPE = "forgejo";
   process.env.FORGE_API_URL = "http://localhost:3000/api/v1";
-  
+
   const provider = createGitForgeProviderFromEnv();
   const result = await provider.fetchData({
     repository: "owner/repo",
     prNumber: "123",
     isPR: false,
   });
-  
+
   expect(result.contextData.title).toBe("Test Issue");
-  
+
   server.stop();
 });
 ```
@@ -111,9 +120,10 @@ test("fetches Forgejo issue data", async () => {
 ### 3. E2E Tests (Phase 3)
 
 #### Using Docker
+
 ```yaml
 # docker-compose.test.yml
-version: '3'
+version: "3"
 services:
   forgejo:
     image: codeberg.org/forgejo/forgejo:latest
@@ -125,6 +135,7 @@ services:
 ```
 
 #### E2E Test Example
+
 ```typescript
 test("complete workflow with real Forgejo instance", async () => {
   // Start Forgejo container
@@ -138,6 +149,7 @@ test("complete workflow with real Forgejo instance", async () => {
 ## Mocking Strategies
 
 ### 1. API Response Mocks
+
 ```typescript
 const mockPRResponse = {
   id: 1,
@@ -152,12 +164,15 @@ const mockPRResponse = {
 ```
 
 ### 2. Provider Mocks
+
 ```typescript
 class MockForgejoProvider extends ForgejoProvider {
   constructor(private mockResponses: any) {
-    super({ /* config */ });
+    super({
+      /* config */
+    });
   }
-  
+
   async fetchData(params: FetchDataParams): Promise<FetchDataResult> {
     return this.mockResponses[params.prNumber] || super.fetchData(params);
   }
@@ -177,6 +192,7 @@ GITHUB_TOKEN=test-token
 ## CI/CD Integration
 
 ### GitHub Actions Workflow
+
 ```yaml
 name: Test Forgejo Support
 on: [push, pull_request]
@@ -189,13 +205,13 @@ jobs:
         image: codeberg.org/forgejo/forgejo:latest
         ports:
           - 3000:3000
-    
+
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - run: bun install
       - run: bun test
-      
+
   test-github-compatibility:
     runs-on: ubuntu-latest
     steps:
@@ -208,12 +224,14 @@ jobs:
 ## Debugging Tests
 
 ### Enable Verbose Logging
+
 ```typescript
 // In test files
 process.env.DEBUG = "forgejo:*";
 ```
 
 ### Use Test Utilities
+
 ```typescript
 // test/utils/test-helpers.ts
 export function createTestProvider(overrides = {}) {
@@ -228,11 +246,13 @@ export function createTestProvider(overrides = {}) {
 ## Test Coverage
 
 ### Check Coverage
+
 ```bash
 bun test --coverage
 ```
 
 ### Coverage Targets
+
 - Unit tests: 90%+ coverage
 - Integration tests: 70%+ coverage
 - E2E tests: Key workflows covered
@@ -240,12 +260,14 @@ bun test --coverage
 ## Common Issues and Solutions
 
 ### Issue: API Authentication Fails
+
 ```typescript
 // Use mock tokens in tests
 process.env.GITHUB_TOKEN = "test-token-12345";
 ```
 
 ### Issue: Network Requests in Tests
+
 ```typescript
 // Mock all external requests
 beforeEach(() => {
@@ -256,6 +278,7 @@ beforeEach(() => {
 ```
 
 ### Issue: File System Operations
+
 ```typescript
 // Use temporary directories
 import { tmpdir } from "os";

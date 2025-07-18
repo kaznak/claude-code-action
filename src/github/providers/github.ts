@@ -13,9 +13,9 @@ import type {
 import type { CommentWithImages } from "../utils/image-downloader";
 import { downloadCommentImages } from "../utils/image-downloader";
 import type { GitForgeProvider, GitForgeConfig } from "./interface";
-import type { 
-  FetchDataResult, 
-  FetchDataParams, 
+import type {
+  FetchDataResult,
+  FetchDataParams,
   ForgeFileWithSHA,
   ForgeAuthor,
   ForgeComment,
@@ -23,29 +23,28 @@ import type {
   ForgeFile,
   ForgeReview,
   ForgePullRequest,
-  ForgeIssue
+  ForgeIssue,
 } from "./types";
 
 /**
  * GitHub provider implementation using GraphQL API
  */
 export class GitHubProvider implements GitForgeProvider {
-  private octokits: Octokits;
-  private config: GitForgeConfig;
-
-  constructor(octokits: Octokits, config: GitForgeConfig) {
-    this.octokits = octokits;
-    this.config = config;
+  constructor(
+    private octokits: Octokits,
+    _config: GitForgeConfig,
+  ) {
+    // Config will be used for future enhancements
   }
 
   getProviderType(): string {
-    return 'github';
+    return "github";
   }
 
   async fetchData(params: FetchDataParams): Promise<FetchDataResult> {
     const { repository, prNumber, isPR, triggerUsername } = params;
     const [owner, repo] = repository.split("/");
-    
+
     if (!owner || !repo) {
       throw new Error("Invalid repository format. Expected 'owner/repo'.");
     }
@@ -209,7 +208,9 @@ export class GitHubProvider implements GitForgeProvider {
       comments: this.convertToForgeComments(comments),
       changedFiles: this.convertToForgeFiles(changedFiles),
       changedFilesWithSHA,
-      reviewData: reviewData ? { nodes: this.convertToForgeReviews(reviewData.nodes) } : null,
+      reviewData: reviewData
+        ? { nodes: this.convertToForgeReviews(reviewData.nodes) }
+        : null,
       imageUrlMap,
       triggerDisplayName,
     };
@@ -217,10 +218,9 @@ export class GitHubProvider implements GitForgeProvider {
 
   async fetchUserDisplayName(login: string): Promise<string | null> {
     try {
-      const result = await this.octokits.graphql<{ user: { name: string | null } }>(
-        USER_QUERY,
-        { login }
-      );
+      const result = await this.octokits.graphql<{
+        user: { name: string | null };
+      }>(USER_QUERY, { login });
       return result.user.name;
     } catch (error) {
       console.warn(`Failed to fetch user display name for ${login}:`, error);
@@ -228,9 +228,16 @@ export class GitHubProvider implements GitForgeProvider {
     }
   }
 
-  async createComment(repository: string, number: string, body: string): Promise<void> {
+  async createComment(
+    repository: string,
+    number: string,
+    body: string,
+  ): Promise<void> {
     const [owner, repo] = repository.split("/");
-    
+    if (!owner || !repo) {
+      throw new Error("Invalid repository format. Expected 'owner/repo'.");
+    }
+
     await this.octokits.rest.issues.createComment({
       owner,
       repo,
@@ -239,9 +246,16 @@ export class GitHubProvider implements GitForgeProvider {
     });
   }
 
-  async updateComment(repository: string, commentId: string, body: string): Promise<void> {
+  async updateComment(
+    repository: string,
+    commentId: string,
+    body: string,
+  ): Promise<void> {
     const [owner, repo] = repository.split("/");
-    
+    if (!owner || !repo) {
+      throw new Error("Invalid repository format. Expected 'owner/repo'.");
+    }
+
     await this.octokits.rest.issues.updateComment({
       owner,
       repo,
@@ -251,27 +265,29 @@ export class GitHubProvider implements GitForgeProvider {
   }
 
   // Private helper methods to convert GitHub types to unified forge types
-  private convertToForgeData(data: GitHubPullRequest | GitHubIssue): ForgePullRequest | ForgeIssue {
-    if ('baseRefName' in data) {
+  private convertToForgeData(
+    data: GitHubPullRequest | GitHubIssue,
+  ): ForgePullRequest | ForgeIssue {
+    if ("baseRefName" in data) {
       // It's a PR
       return {
         ...data,
         author: this.convertToForgeAuthor(data.author),
         commits: {
           totalCount: data.commits.totalCount,
-          nodes: data.commits.nodes.map(node => ({
-            commit: this.convertToForgeCommit(node.commit)
-          }))
+          nodes: data.commits.nodes.map((node) => ({
+            commit: this.convertToForgeCommit(node.commit),
+          })),
         },
         files: {
-          nodes: this.convertToForgeFiles(data.files.nodes)
+          nodes: this.convertToForgeFiles(data.files.nodes),
         },
         comments: {
-          nodes: this.convertToForgeComments(data.comments.nodes)
+          nodes: this.convertToForgeComments(data.comments.nodes),
         },
         reviews: {
-          nodes: this.convertToForgeReviews(data.reviews.nodes)
-        }
+          nodes: this.convertToForgeReviews(data.reviews.nodes),
+        },
       } as ForgePullRequest;
     } else {
       // It's an issue
@@ -279,51 +295,54 @@ export class GitHubProvider implements GitForgeProvider {
         ...data,
         author: this.convertToForgeAuthor(data.author),
         comments: {
-          nodes: this.convertToForgeComments(data.comments.nodes)
-        }
+          nodes: this.convertToForgeComments(data.comments.nodes),
+        },
       } as ForgeIssue;
     }
   }
 
-  private convertToForgeAuthor(author: { login: string; name?: string }): ForgeAuthor {
+  private convertToForgeAuthor(author: {
+    login: string;
+    name?: string;
+  }): ForgeAuthor {
     return {
       login: author.login,
-      name: author.name
+      name: author.name,
     };
   }
 
   private convertToForgeComments(comments: GitHubComment[]): ForgeComment[] {
-    return comments.map(comment => ({
+    return comments.map((comment) => ({
       id: comment.id,
       databaseId: comment.databaseId,
       body: comment.body,
       author: this.convertToForgeAuthor(comment.author),
-      createdAt: comment.createdAt
+      createdAt: comment.createdAt,
     }));
   }
 
   private convertToForgeFiles(files: GitHubFile[]): ForgeFile[] {
-    return files.map(file => ({
+    return files.map((file) => ({
       path: file.path,
       additions: file.additions,
       deletions: file.deletions,
-      changeType: file.changeType
+      changeType: file.changeType,
     }));
   }
 
-  private convertToForgeCommit(commit: GitHubCommit): ForgeCommit {
+  private convertToForgeCommit(commit: {oid: string; message: string; author: {name: string; email: string}}): ForgeCommit {
     return {
       oid: commit.oid,
       message: commit.message,
       author: {
         name: commit.author.name,
-        email: commit.author.email
-      }
+        email: commit.author.email,
+      },
     };
   }
 
   private convertToForgeReviews(reviews: GitHubReview[]): ForgeReview[] {
-    return reviews.map(review => ({
+    return reviews.map((review) => ({
       id: review.id,
       databaseId: review.databaseId,
       author: this.convertToForgeAuthor(review.author),
@@ -331,16 +350,16 @@ export class GitHubProvider implements GitForgeProvider {
       state: review.state,
       submittedAt: review.submittedAt,
       comments: {
-        nodes: review.comments.nodes.map(comment => ({
+        nodes: review.comments.nodes.map((comment) => ({
           id: comment.id,
           databaseId: comment.databaseId,
           body: comment.body,
           author: this.convertToForgeAuthor(comment.author),
           createdAt: comment.createdAt,
           path: comment.path,
-          line: comment.line
-        }))
-      }
+          line: comment.line,
+        })),
+      },
     }));
   }
 }
