@@ -24,15 +24,150 @@ describe("ForgejoProvider", () => {
   });
 
   describe("fetchData", () => {
-    it("should throw not implemented error for now", async () => {
+    it("should fetch PR data successfully", async () => {
+      const mockFetch = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 1,
+            number: 123,
+            title: "Test PR",
+            body: "Test body",
+            user: { id: 1, login: "testuser", full_name: "Test User" },
+            state: "open",
+            created_at: "2023-01-01T00:00:00Z",
+            base: { ref: "main", sha: "abc123" },
+            head: { ref: "feature", sha: "def456" },
+            additions: 10,
+            deletions: 5,
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              sha: "commit1",
+              commit: {
+                message: "Test commit",
+                author: { name: "Test User", email: "test@example.com" },
+              },
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              filename: "test.js",
+              additions: 10,
+              deletions: 5,
+              changes: 15,
+              status: "modified",
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              id: 1,
+              user: { id: 1, login: "testuser", full_name: "Test User" },
+              body: "Test comment",
+              created_at: "2023-01-01T01:00:00Z",
+            },
+          ],
+        });
+
+      global.fetch = mockFetch as any;
+
       const params: FetchDataParams = {
         repository: "test-owner/test-repo",
         prNumber: "123",
         isPR: true,
       };
 
+      const result = await provider.fetchData(params);
+
+      expect(result.contextData.title).toBe("Test PR");
+      expect(result.contextData.author.login).toBe("testuser");
+      expect(result.comments).toHaveLength(1);
+      expect(result.changedFiles).toHaveLength(1);
+      expect(result.changedFiles[0]?.path).toBe("test.js");
+    });
+
+    it("should fetch issue data successfully", async () => {
+      const mockFetch = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 1,
+            number: 123,
+            title: "Test Issue",
+            body: "Test issue body",
+            user: { id: 1, login: "testuser", full_name: "Test User" },
+            state: "open",
+            created_at: "2023-01-01T00:00:00Z",
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              id: 1,
+              user: { id: 1, login: "testuser", full_name: "Test User" },
+              body: "Test comment",
+              created_at: "2023-01-01T01:00:00Z",
+            },
+          ],
+        });
+
+      global.fetch = mockFetch as any;
+
+      const params: FetchDataParams = {
+        repository: "test-owner/test-repo",
+        prNumber: "123",
+        isPR: false,
+      };
+
+      const result = await provider.fetchData(params);
+
+      expect(result.contextData.title).toBe("Test Issue");
+      expect(result.contextData.author.login).toBe("testuser");
+      expect(result.comments).toHaveLength(1);
+      expect(result.changedFiles).toHaveLength(0);
+      expect(result.reviewData).toBeNull();
+    });
+
+    it("should handle API errors gracefully", async () => {
+      const mockFetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({ message: "Not found" }),
+      });
+      global.fetch = mockFetch as any;
+
+      const params: FetchDataParams = {
+        repository: "test-owner/test-repo",
+        prNumber: "999",
+        isPR: true,
+      };
+
       await expect(provider.fetchData(params)).rejects.toThrow(
-        "Forgejo provider not yet implemented. Coming in Phase 2.",
+        "Failed to fetch pull request: 404",
+      );
+    });
+
+    it("should throw error for invalid repository format", async () => {
+      const params: FetchDataParams = {
+        repository: "invalid-repo",
+        prNumber: "123",
+        isPR: true,
+      };
+
+      await expect(provider.fetchData(params)).rejects.toThrow(
+        "Invalid repository format: invalid-repo",
       );
     });
   });

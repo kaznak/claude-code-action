@@ -1,6 +1,17 @@
 import type { GitForgeProvider, GitForgeConfig } from "./interface";
 import type { FetchDataResult, FetchDataParams } from "./types";
 import { ForgejoApiClient } from "./forgejo-client";
+import {
+  mapForgejoPullRequest,
+  mapForgejoIssue,
+  type ForgejoPullRequest,
+  type ForgejoIssue,
+  type ForgejoComment,
+  type ForgejoCommit,
+  type ForgejoFile,
+  type ForgejoReview,
+  type ForgejoReviewComment,
+} from "../mappers/forgejo";
 
 /**
  * Forgejo provider implementation using REST API
@@ -17,12 +28,163 @@ export class ForgejoProvider implements GitForgeProvider {
     return "forgejo";
   }
 
-  async fetchData(_params: FetchDataParams): Promise<FetchDataResult> {
-    // TODO: Implement Forgejo REST API calls in Phase 2
-    // This will replace GraphQL queries with REST API calls to Forgejo
+  async fetchData(params: FetchDataParams): Promise<FetchDataResult> {
+    const { repository, prNumber, isPR, triggerUsername } = params;
 
-    // Placeholder implementation - will be replaced with actual REST API calls
-    throw new Error("Forgejo provider not yet implemented. Coming in Phase 2.");
+    const parts = repository.split("/");
+    if (parts.length !== 2) {
+      throw new Error(`Invalid repository format: ${repository}`);
+    }
+    const [owner, repo] = parts;
+
+    try {
+      if (isPR) {
+        return await this.fetchPullRequestData(
+          owner,
+          repo,
+          prNumber,
+          triggerUsername,
+        );
+      } else {
+        return await this.fetchIssueData(
+          owner,
+          repo,
+          prNumber,
+          triggerUsername,
+        );
+      }
+    } catch (error) {
+      console.error(
+        `Failed to fetch data for ${repository}${isPR ? "#" : "/issues/"}${prNumber}:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  private async fetchPullRequestData(
+    owner: string,
+    repo: string,
+    prNumber: string,
+    triggerUsername?: string,
+  ): Promise<FetchDataResult> {
+    // Fetch pull request data using multiple REST API calls
+    const [prResponse, commitsResponse, filesResponse, commentsResponse] =
+      await Promise.all([
+        this.client.get(`/repos/${owner}/${repo}/pulls/${prNumber}`),
+        this.client.get(`/repos/${owner}/${repo}/pulls/${prNumber}/commits`),
+        this.client.get(`/repos/${owner}/${repo}/pulls/${prNumber}/files`),
+        this.client.get(`/repos/${owner}/${repo}/issues/${prNumber}/comments`),
+      ]);
+
+    if (!prResponse.ok) {
+      throw new Error(`Failed to fetch pull request: ${prResponse.status}`);
+    }
+
+    const prData = prResponse.data as ForgejoPullRequest;
+    const commits = (
+      commitsResponse.ok ? commitsResponse.data : []
+    ) as ForgejoCommit[];
+    const files = (filesResponse.ok ? filesResponse.data : []) as ForgejoFile[];
+    const comments = (
+      commentsResponse.ok ? commentsResponse.data : []
+    ) as ForgejoComment[];
+
+    // Try to fetch reviews (may not be available on all Forgejo instances)
+    let reviews: ForgejoReview[] = [];
+    let reviewComments: ForgejoReviewComment[] = [];
+
+    try {
+      const reviewsResponse = await this.client.get(
+        `/repos/${owner}/${repo}/pulls/${prNumber}/reviews`,
+      );
+      if (reviewsResponse.ok) {
+        reviews = reviewsResponse.data as ForgejoReview[];
+      }
+
+      const reviewCommentsResponse = await this.client.get(
+        `/repos/${owner}/${repo}/pulls/${prNumber}/comments`,
+      );
+      if (reviewCommentsResponse.ok) {
+        reviewComments = reviewCommentsResponse.data as ForgejoReviewComment[];
+      }
+    } catch (error) {
+      console.warn(
+        `Could not fetch reviews for ${owner}/${repo}#${prNumber}:`,
+        error,
+      );
+    }
+
+    // Convert to unified format
+    const contextData = mapForgejoPullRequest(
+      prData,
+      commits,
+      files,
+      comments,
+      reviews,
+      reviewComments,
+    );
+
+    // Get user display name if trigger username is provided
+    let triggerDisplayName: string | null = null;
+    if (triggerUsername) {
+      triggerDisplayName = await this.fetchUserDisplayName(triggerUsername);
+    }
+
+    return {
+      contextData,
+      comments: contextData.comments.nodes,
+      changedFiles: contextData.files.nodes,
+      changedFilesWithSHA: contextData.files.nodes.map((file) => ({
+        ...file,
+        sha: prData.head.sha,
+      })),
+      reviewData:
+        contextData.reviews.nodes.length > 0 ? contextData.reviews : null,
+      imageUrlMap: new Map(), // TODO: Implement image URL mapping
+      triggerDisplayName,
+    };
+  }
+
+  private async fetchIssueData(
+    owner: string,
+    repo: string,
+    issueNumber: string,
+    triggerUsername?: string,
+  ): Promise<FetchDataResult> {
+    // Fetch issue data using REST API calls
+    const [issueResponse, commentsResponse] = await Promise.all([
+      this.client.get(`/repos/${owner}/${repo}/issues/${issueNumber}`),
+      this.client.get(`/repos/${owner}/${repo}/issues/${issueNumber}/comments`),
+    ]);
+
+    if (!issueResponse.ok) {
+      throw new Error(`Failed to fetch issue: ${issueResponse.status}`);
+    }
+
+    const issueData = issueResponse.data as ForgejoIssue;
+    const comments = (
+      commentsResponse.ok ? commentsResponse.data : []
+    ) as ForgejoComment[];
+
+    // Convert to unified format
+    const contextData = mapForgejoIssue(issueData, comments);
+
+    // Get user display name if trigger username is provided
+    let triggerDisplayName: string | null = null;
+    if (triggerUsername) {
+      triggerDisplayName = await this.fetchUserDisplayName(triggerUsername);
+    }
+
+    return {
+      contextData,
+      comments: contextData.comments.nodes,
+      changedFiles: [], // Issues don't have changed files
+      changedFilesWithSHA: [], // Issues don't have changed files
+      reviewData: null, // Issues don't have reviews
+      imageUrlMap: new Map(), // TODO: Implement image URL mapping
+      triggerDisplayName,
+    };
   }
 
   async fetchUserDisplayName(login: string): Promise<string | null> {
