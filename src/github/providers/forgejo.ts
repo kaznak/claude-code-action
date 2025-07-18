@@ -294,5 +294,4 @@ export class ForgejoProvider implements GitForgeProvider {
       throw error;
     }
   }
-
 }
