@@ -104,3 +104,4 @@ jobs:
           mcp_config: /tmp/mcp-config/mcp-servers.json
           timeout_minutes: "5"
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
