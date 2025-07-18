@@ -160,7 +160,7 @@ export class ForgejoProvider implements GitForgeProvider {
       })),
       reviewData:
         contextData.reviews.nodes.length > 0 ? contextData.reviews : null,
-      imageUrlMap: new Map(), // TODO: Implement image URL mapping
+      imageUrlMap: new Map(), // TODO: Implement image URL mapping for Forgejo attachments
       triggerDisplayName,
     };
   }
@@ -212,7 +212,7 @@ export class ForgejoProvider implements GitForgeProvider {
       changedFiles: [], // Issues don't have changed files
       changedFilesWithSHA: [], // Issues don't have changed files
       reviewData: null, // Issues don't have reviews
-      imageUrlMap: new Map(), // TODO: Implement image URL mapping
+      imageUrlMap: new Map(), // TODO: Implement image URL mapping for Forgejo attachments
       triggerDisplayName,
     };
   }
@@ -292,11 +292,4 @@ export class ForgejoProvider implements GitForgeProvider {
     }
   }
 
-  // TODO: Phase 2 - Implement these private helper methods
-  // private async fetchForgejoIssue(owner: string, repo: string, number: string): Promise<ForgeIssue>
-  // private async fetchForgejoPullRequest(owner: string, repo: string, number: string): Promise<ForgePullRequest>
-  // private async fetchForgejoComments(owner: string, repo: string, number: string): Promise<ForgeComment[]>
-  // private async fetchForgejoCommits(owner: string, repo: string, number: string): Promise<ForgeCommit[]>
-  // private async fetchForgejoFiles(owner: string, repo: string, number: string): Promise<ForgeFile[]>
-  // private convertForgejoDataToForgeTypes(data: any): ForgePullRequest | ForgeIssue
 }

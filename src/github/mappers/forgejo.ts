@@ -205,7 +205,8 @@ export function mapForgejoPullRequest(
   // Group review comments by review ID
   const reviewCommentsMap = new Map<number, ForgejoReviewComment[]>();
   reviewComments.forEach((comment) => {
-    // If comment doesn't have a review ID, we'll assign to the first review
+    // Note: Forgejo review comments may not have explicit review association
+    // We assign orphaned comments to the first review, or use 0 as fallback
     const reviewId = reviews.length > 0 ? reviews[0]!.id : 0;
     if (!reviewCommentsMap.has(reviewId)) {
       reviewCommentsMap.set(reviewId, []);
