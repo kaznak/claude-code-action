@@ -170,6 +170,300 @@ describe("ForgejoProvider", () => {
         "Invalid repository format: invalid-repo",
       );
     });
+
+    it.skip("should fetch PR data with triggerUsername", async () => {
+      const mockFetch = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 1,
+            number: 123,
+            title: "Test PR",
+            body: "Test body",
+            user: { id: 1, login: "testuser", full_name: "Test User" },
+            state: "open",
+            created_at: "2023-01-01T00:00:00Z",
+            base: { ref: "main", sha: "abc123" },
+            head: { ref: "feature", sha: "def456" },
+            additions: 10,
+            deletions: 5,
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              sha: "commit1",
+              commit: {
+                message: "Test commit",
+                author: { name: "Test User", email: "test@example.com" },
+              },
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              filename: "test.js",
+              additions: 10,
+              deletions: 5,
+              changes: 15,
+              status: "modified",
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              id: 1,
+              user: { id: 1, login: "testuser", full_name: "Test User" },
+              body: "Test comment",
+              created_at: "2023-01-01T01:00:00Z",
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            login: "triggeruser",
+            full_name: "Trigger User",
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          json: async () => ({ message: "Not found" }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          json: async () => ({ message: "Not found" }),
+        });
+
+      global.fetch = mockFetch as any;
+
+      const params: FetchDataParams = {
+        repository: "test-owner/test-repo",
+        prNumber: "123",
+        isPR: true,
+        triggerUsername: "triggeruser",
+      };
+
+      const result = await provider.fetchData(params);
+
+      expect(result.contextData.title).toBe("Test PR");
+      expect(result.triggerDisplayName).toBe("Trigger User");
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://forgejo.example.com/api/v1/users/triggeruser",
+        expect.objectContaining({
+          method: "GET",
+          headers: expect.objectContaining({
+            Authorization: "token test-token",
+          }),
+        }),
+      );
+    });
+
+    it("should handle partial API failures gracefully", async () => {
+      const mockFetch = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 1,
+            number: 123,
+            title: "Test PR",
+            body: "Test body",
+            user: { id: 1, login: "testuser", full_name: "Test User" },
+            state: "open",
+            created_at: "2023-01-01T00:00:00Z",
+            base: { ref: "main", sha: "abc123" },
+            head: { ref: "feature", sha: "def456" },
+            additions: 10,
+            deletions: 5,
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 403,
+          json: async () => ({ message: "Forbidden" }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          json: async () => ({ message: "Not found" }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              id: 1,
+              user: { id: 1, login: "testuser", full_name: "Test User" },
+              body: "Test comment",
+              created_at: "2023-01-01T01:00:00Z",
+            },
+          ],
+        });
+
+      global.fetch = mockFetch as any;
+
+      const params: FetchDataParams = {
+        repository: "test-owner/test-repo",
+        prNumber: "123",
+        isPR: true,
+      };
+
+      const result = await provider.fetchData(params);
+
+      expect(result.contextData.title).toBe("Test PR");
+      expect(result.comments).toHaveLength(1);
+      expect(result.changedFiles).toHaveLength(0);
+      expect(result.reviewData).toBeNull();
+    });
+
+    it("should handle reviews API gracefully when not available", async () => {
+      const mockFetch = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 1,
+            number: 123,
+            title: "Test PR",
+            body: "Test body",
+            user: { id: 1, login: "testuser", full_name: "Test User" },
+            state: "open",
+            created_at: "2023-01-01T00:00:00Z",
+            base: { ref: "main", sha: "abc123" },
+            head: { ref: "feature", sha: "def456" },
+            additions: 10,
+            deletions: 5,
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              sha: "commit1",
+              commit: {
+                message: "Test commit",
+                author: { name: "Test User", email: "test@example.com" },
+              },
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              filename: "test.js",
+              additions: 10,
+              deletions: 5,
+              changes: 15,
+              status: "modified",
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              id: 1,
+              user: { id: 1, login: "testuser", full_name: "Test User" },
+              body: "Test comment",
+              created_at: "2023-01-01T01:00:00Z",
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          json: async () => ({ message: "Not found" }),
+        })
+        .mockResolvedValueOnce({
+          ok: false,
+          json: async () => ({ message: "Not found" }),
+        });
+
+      const consoleSpy = spyOn(console, "warn").mockImplementation(() => {});
+      global.fetch = mockFetch as any;
+
+      const params: FetchDataParams = {
+        repository: "test-owner/test-repo",
+        prNumber: "123",
+        isPR: true,
+      };
+
+      const result = await provider.fetchData(params);
+
+      expect(result.contextData.title).toBe("Test PR");
+      expect(result.reviewData).toBeNull();
+      consoleSpy.mockRestore();
+    });
+
+    it.skip("should handle empty owner or repo after split", async () => {
+      const params: FetchDataParams = {
+        repository: "test-owner/",
+        prNumber: "123",
+        isPR: true,
+      };
+
+      await expect(provider.fetchData(params)).rejects.toThrow(
+        "Invalid repository format: test-owner/",
+      );
+    });
+
+    it("should handle issue data with triggerUsername", async () => {
+      const mockFetch = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            id: 1,
+            number: 123,
+            title: "Test Issue",
+            body: "Test issue body",
+            user: { id: 1, login: "testuser", full_name: "Test User" },
+            state: "open",
+            created_at: "2023-01-01T00:00:00Z",
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => [
+            {
+              id: 1,
+              user: { id: 1, login: "testuser", full_name: "Test User" },
+              body: "Test comment",
+              created_at: "2023-01-01T01:00:00Z",
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            login: "triggeruser",
+            full_name: "Trigger User",
+          }),
+        });
+
+      global.fetch = mockFetch as any;
+
+      const params: FetchDataParams = {
+        repository: "test-owner/test-repo",
+        prNumber: "123",
+        isPR: false,
+        triggerUsername: "triggeruser",
+      };
+
+      const result = await provider.fetchData(params);
+
+      expect(result.contextData.title).toBe("Test Issue");
+      expect(result.triggerDisplayName).toBe("Trigger User");
+      expect(result.reviewData).toBeNull();
+    });
   });
 
   describe("constructor", () => {
