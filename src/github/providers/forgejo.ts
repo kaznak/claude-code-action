@@ -36,6 +36,9 @@ export class ForgejoProvider implements GitForgeProvider {
       throw new Error(`Invalid repository format: ${repository}`);
     }
     const [owner, repo] = parts;
+    if (owner == undefined || repo == undefined) {
+      throw new Error(`Invalid repository format: ${repository}`);
+    }
 
     try {
       if (isPR) {
@@ -160,7 +163,7 @@ export class ForgejoProvider implements GitForgeProvider {
       })),
       reviewData:
         contextData.reviews.nodes.length > 0 ? contextData.reviews : null,
-      imageUrlMap: new Map(), // TODO: Implement image URL mapping for Forgejo attachments
+      imageUrlMap: new Map(), // TODO: Implement image URL mapping
       triggerDisplayName,
     };
   }
@@ -212,7 +215,7 @@ export class ForgejoProvider implements GitForgeProvider {
       changedFiles: [], // Issues don't have changed files
       changedFilesWithSHA: [], // Issues don't have changed files
       reviewData: null, // Issues don't have reviews
-      imageUrlMap: new Map(), // TODO: Implement image URL mapping for Forgejo attachments
+      imageUrlMap: new Map(), // TODO: Implement image URL mapping
       triggerDisplayName,
     };
   }
