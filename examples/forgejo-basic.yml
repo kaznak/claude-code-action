@@ -1,0 +1,50 @@
+name: Claude for Forgejo - Basic Setup
+
+# Basic Forgejo integration for claude-code-action
+# This workflow shows the minimal configuration needed to use Claude with Forgejo
+
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  claude-response:
+    runs-on: ubuntu-latest
+
+    # Only trigger on comments mentioning @claude
+    if: >
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'issues' && github.event.action == 'assigned' && github.event.assignee.login == 'claude-bot') ||
+      (github.event_name == 'issues' && github.event.action == 'opened' && contains(github.event.issue.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude'))
+
+    steps:
+      - name: Claude Code Response
+        uses: anthropics/claude-code-action@v1
+        with:
+          # Configure for Forgejo
+          forge_type: forgejo
+          forge_api_url: https://your-forgejo-instance.com/api/v1
+          forge_server_url: https://your-forgejo-instance.com
+
+          # Basic configuration
+          trigger_phrase: "@claude"
+          base_branch: main
+
+          # Optional: Customize Claude's behavior
+          max_turns: 3
+          timeout_minutes: 15
+
+        env:
+          # Use Anthropic API for Claude
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+          # Use your Forgejo token (same format as GitHub token)
+          GITHUB_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
