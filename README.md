@@ -14,6 +14,78 @@ A general-purpose [Claude Code](https://claude.ai/code) action for GitHub PRs an
 - 📋 **Progress Tracking**: Visual progress indicators with checkboxes that dynamically update as Claude completes tasks
 - 🏃 **Runs on Your Infrastructure**: The action executes entirely on your own GitHub runner (Anthropic API calls go to your chosen provider)
 
+## Git Forge Support
+
+This action supports multiple Git forge platforms:
+
+- ✅ **GitHub**: Full support with GraphQL and REST APIs
+- ✅ **Forgejo**: Full support with REST API integration
+- 🔮 **GitLab**: Planned for future releases
+- 🔮 **Gitea**: Planned for future releases
+
+### Using with Forgejo
+
+[Forgejo](https://forgejo.org/) is a self-hosted Git service that provides a GitHub-compatible API. This action can work with any Forgejo instance with minimal configuration.
+
+#### Configuration for Forgejo
+
+Add these inputs to your workflow when using Forgejo:
+
+```yaml
+- uses: anthropics/claude-code-action@v1
+  with:
+    forge_type: forgejo
+    forge_api_url: https://your-forgejo-instance.com/api/v1
+    forge_server_url: https://your-forgejo-instance.com
+    # ... other configuration
+```
+
+#### Environment Variables
+
+```bash
+FORGE_TYPE=forgejo
+FORGE_API_URL=https://your-forgejo-instance.com/api/v1
+FORGE_SERVER_URL=https://your-forgejo-instance.com
+```
+
+#### Authentication
+
+Forgejo uses the same token-based authentication as GitHub. Generate a personal access token in your Forgejo instance and add it as a secret:
+
+```yaml
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  GITHUB_TOKEN: ${{ secrets.FORGEJO_TOKEN }} # Use your Forgejo token
+```
+
+#### Example Forgejo Workflow
+
+```yaml
+name: Claude for Forgejo
+on:
+  issue_comment:
+    types: [created]
+  issues:
+    types: [opened, assigned]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  claude-response:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          forge_type: forgejo
+          forge_api_url: https://forgejo.example.com/api/v1
+          forge_server_url: https://forgejo.example.com
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.FORGEJO_TOKEN }}
+```
+
+**Note**: Replace `https://forgejo.example.com` with your actual Forgejo instance URL.
+
 ## Quickstart
 
 The easiest way to set up this action is through [Claude Code](https://claude.ai/code) in the terminal. Just open `claude` and run `/install-github-app`.
@@ -193,6 +265,9 @@ jobs:
 | `additional_permissions`       | Additional permissions to enable. Currently supports 'actions: read' for viewing workflow results                    | No       | ""        |
 | `experimental_allowed_domains` | Restrict network access to these domains only (newline-separated).                                                   | No       | ""        |
 | `use_commit_signing`           | Enable commit signing using GitHub's commit signature verification. When false, Claude uses standard git commands    | No       | `false`   |
+| `forge_type`                   | Git forge type: 'github' or 'forgejo' (determines which API to use)                                                  | No       | `github`  |
+| `forge_api_url`                | API URL for the Git forge (required for Forgejo, e.g., https://forgejo.example.com/api/v1)                           | No       | -         |
+| `forge_server_url`             | Server URL for the Git forge (required for Forgejo, e.g., https://forgejo.example.com)                               | No       | -         |
 
 \*Required when using direct Anthropic API (default and when not using Bedrock or Vertex)
 
@@ -286,6 +361,27 @@ For example, if your Python MCP server is at `mcp_servers/weather.py`, you would
 
 - Always use GitHub Secrets (`${{ secrets.SECRET_NAME }}`) for sensitive values like API keys, tokens, or passwords. Never hardcode secrets directly in the workflow file.
 - Your custom servers will override any built-in servers with the same name.
+
+## Example Workflows
+
+This repository includes several example workflow configurations for different use cases:
+
+### GitHub Workflows
+
+- [`examples/claude.yml`](./examples/claude.yml) - Basic GitHub setup
+- [`examples/claude-auto-review.yml`](./examples/claude-auto-review.yml) - Automated code reviews
+- [`examples/claude-pr-path-specific.yml`](./examples/claude-pr-path-specific.yml) - Path-specific triggers
+- [`examples/claude-review-from-author.yml`](./examples/claude-review-from-author.yml) - Author-triggered reviews
+
+### Forgejo Workflows
+
+- [`examples/forgejo-basic.yml`](./examples/forgejo-basic.yml) - Basic Forgejo setup
+- [`examples/forgejo-advanced.yml`](./examples/forgejo-advanced.yml) - Advanced configuration with multiple authentication methods
+- [`examples/forgejo-codeberg.yml`](./examples/forgejo-codeberg.yml) - Configuration for Codeberg (public Forgejo instance)
+
+### Setup Guides
+
+- [Forgejo Setup Guide](./docs/forgejo-setup-guide.md) - Comprehensive guide for Forgejo integration
 
 ## Examples
 
